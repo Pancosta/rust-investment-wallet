@@ -6,17 +6,19 @@ use tracing::info;
 use tracing_subscriber::{Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::routes;
-use crate::models::Asset;
+use crate::models::{Asset, UserRecord};
 
 #[derive(Clone)]
 pub struct AppState {
     pub assets: Arc<Mutex<Vec<Asset>>>,
+    pub users: Arc<Mutex<Vec<UserRecord>>>,
 }
 
 impl AppState {
     pub fn new() -> Self {
         Self {
             assets: Default::default(),
+            users: Default::default(),
         }
     }
 }
@@ -34,6 +36,7 @@ impl App {
         let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
         let router = Router::new()
             .nest("/api", routes::api::router())
+            .merge(routes::frontend::router())
             .with_state(AppState::new());
 
         info!("Server listening on http://0.0.0.0:3000");
