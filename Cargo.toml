@@ -6,13 +6,15 @@ edition = "2024"
 [dependencies]
 askama = { version = "0.16.0", features = ["derive"] }
 axum = { version = "0.8.9", features = ["macros"] }
-axum-extra = { version = "0.12.6", features = ["cookie"] }
+axum-extra = { version = "0.12.6", features = ["cookie", "cookie-signed"] }
 color-eyre = "0.6.5"
+futures = "0.3.34"
 jwt-simple = "0.13.0"
 password-auth = "1.0.0"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
 thiserror = "2.0.19"
+time = { version = "0.3.55", features = ["serde", "formatting", "macros"] }
 tokio = { version = "1.53.1", features = ["rt-multi-thread", "macros"] }
 tracing = "0.1.44"
 tracing-subscriber = "0.3.23"

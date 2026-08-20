@@ -6,12 +6,13 @@ use tracing::info;
 use tracing_subscriber::{Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
 
 use crate::routes;
-use crate::models::{Asset, UserRecord};
+use crate::models::{Asset, UserRecord, PurchaseRecord};
 
 #[derive(Clone)]
 pub struct AppState {
     pub assets: Arc<Mutex<Vec<Asset>>>,
     pub users: Arc<Mutex<Vec<UserRecord>>>,
+    pub purchases: Arc<Mutex<Vec<PurchaseRecord>>>,
 }
 
 impl AppState {
@@ -19,6 +20,7 @@ impl AppState {
         Self {
             assets: Default::default(),
             users: Default::default(),
+            purchases: Default::default(),
         }
     }
 }

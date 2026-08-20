@@ -79,6 +79,64 @@ impl Repository {
         
         Ok(users.iter().find(|u| u.username == username).cloned())
     }
+
+    pub async fn list_owned_assets(&self, user_id: i64) -> Result<Vec<crate::models::OwnedAsset>, Infallible> {
+        let assets = self.state.assets.lock().await;
+        let purchases = self.state.purchases.lock().await;
+        let mut owned_assets = Vec::new();
+
+        for asset in assets.iter() {
+            let mut quantity_owned = 0.0;
+            let mut value_delta = 0.0;
+            let mut purchase_history = Vec::new();
+
+            for purchase in purchases.iter().filter(|p| p.user_id == user_id && p.asset_id == asset.id) {
+                quantity_owned += purchase.quantity;
+                let delta = (asset.unit_value - purchase.bought_for) * purchase.quantity;
+                value_delta += delta;
+
+                purchase_history.push(crate::models::PurchaseHistory {
+                    bought_at: purchase.bought_at,
+                    bought_for: purchase.bought_for,
+                    quantity_bought: purchase.quantity,
+                    value_delta: delta,
+                });
+            }
+
+            if quantity_owned > 0.0 || !purchase_history.is_empty() {
+                owned_assets.push(crate::models::OwnedAsset {
+                    id: asset.id,
+                    name: asset.name.clone(),
+                    unit_value: asset.unit_value,
+                    value_delta,
+                    quantity_owned,
+                    purchase_history,
+                });
+            }
+        }
+
+        Ok(owned_assets)
+    }
+
+    pub async fn insert_owned_asset(
+        &self,
+        user_id: i64,
+        asset_id: i64,
+        quantity: f64,
+        unit_value: f64,
+    ) -> Result<(), Infallible> {
+        let mut purchases = self.state.purchases.lock().await;
+
+        purchases.push(crate::models::PurchaseRecord {
+            user_id,
+            asset_id,
+            quantity,
+            bought_for: unit_value,
+            bought_at: time::OffsetDateTime::now_utc(),
+        });
+
+        Ok(())
+    }
 }
 
 impl FromRequestParts<AppState> for Repository {
