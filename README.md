@@ -1,175 +1,107 @@
 # rust-investment-wallet
 
-A web application for tracking investment portfolios, built with Rust. Users can register and log in to manage their owned assets, record purchases, and visualize P&L history through a server-rendered interface.
+Carteira de investimentos fullstack desenvolvida em Rust durante o **Santander Bootcamp Rust AI Developer**, da DIO.
 
-The project was developed during the **Santander Bootcamp Rust AI Developer** at [DIO](https://www.dio.me/).
+A aplicação permite que usuários se cadastrem, façam login e registrem compras de ativos financeiros. O dashboard exibe os ativos adquiridos, o histórico de compras e a variação de valor de cada ativo.
 
----
+## Funcionalidades
 
-## Features
+- Cadastro e autenticação de usuários com senha hash e JWT
+- Dashboard de ativos com histórico de compras por ativo
+- Registro de compras vinculadas ao usuário autenticado
+- Cálculo de variação de valor (delta) entre o preço de compra e o valor atual do ativo
+- API administrativa para criação e atualização de ativos
+- Logout com limpeza de cookie de autenticação
 
-- **Authentication** — Login and registration through a single form; JWT issued as an `HttpOnly` cookie on success
-- **Asset catalog** — Admin-managed list of available assets (name + current unit value)
-- **Portfolio view** — Per-user dashboard showing owned assets, total quantity, current unit value, and aggregate P&L
-- **Purchase history** — Each asset row expands to show individual purchase records with date, quantity, price paid, and per-purchase P&L
-- **Admin API** — Protected endpoints to create and update assets, authenticated via a static `Authorization` header
+## Tecnologias utilizadas
 
----
-
-## Tech stack
-
-| Crate | Purpose |
+| Tecnologia | Finalidade |
 |---|---|
-| [axum](https://github.com/tokio-rs/axum) `0.8` | HTTP framework and routing |
-| [tokio](https://tokio.rs) | Async runtime (`rt-multi-thread`) |
-| [askama](https://github.com/djc/askama) `0.16` | Compile-time HTML templating |
-| [axum-extra](https://docs.rs/axum-extra) | Signed cookie jar extractor |
-| [jwt-simple](https://github.com/jedisct1/rust-jwt-simple) | HS256 JWT generation and verification |
-| [password-auth](https://github.com/RustCrypto/password-hashes) | Password hashing and verification (PHC string format) |
-| [serde](https://serde.rs) / serde_json | JSON serialization/deserialization |
-| [time](https://docs.rs/time) | Typed timestamps with ISO 8601 serde support |
-| [thiserror](https://github.com/dtolnay/thiserror) | Ergonomic error type derivation |
-| [tracing](https://docs.rs/tracing) / tracing-subscriber | Structured logging and span instrumentation |
-| [color-eyre](https://github.com/yaahc/color-eyre) | Rich error reporting at startup |
+| Rust (edition 2024) | Linguagem principal |
+| Axum | Framework web (rotas, extractors, estado compartilhado) |
+| Askama | Engine de templates HTML |
+| Tokio | Runtime assíncrono |
+| jwt-simple | Geração e validação de tokens JWT (HS256) |
+| password-auth | Hash e verificação de senhas |
+| axum-extra | Gerenciamento de cookies |
+| serde / serde_json | Serialização e desserialização de dados |
+| time | Manipulação de datas e formatação |
+| tracing / tracing-subscriber | Logs e instrumentação |
+| color-eyre / thiserror | Tratamento de erros |
+| TailwindCSS (CDN) | Estilização do frontend |
 
----
+## Como executar
 
-## Project structure
-
-```
-src/
-├── main.rs           # Entry point — starts the Tokio runtime
-├── app.rs            # AppState (in-memory store) and server bootstrap
-├── models.rs         # Domain types: Asset, UserRecord, PurchaseRecord, OwnedAsset
-├── repository.rs     # Data access layer; implements FromRequestParts for injection
-├── error.rs          # AppError enum with automatic HTTP status mapping
-├── auth/
-│   ├── user.rs       # User extractor (JWT from cookie), UnauthenticatedUser, token logic
-│   └── admin.rs      # Admin extractor (static Authorization header)
-└── routes/
-    ├── api.rs        # Admin-only REST API: GET/POST/PATCH /api/assets
-    └── frontend.rs   # Server-rendered pages: login, portfolio dashboard, purchase form
-
-templates/
-├── login.html        # Login/registration page (Askama + Tailwind CDN)
-└── assets.html       # Portfolio dashboard with expandable purchase history
-```
-
-State is held entirely in memory using `Arc<Mutex<Vec<T>>>`, shared across handlers via Axum's `State` extractor.
-
----
-
-## Running locally
+Pré-requisitos: [Rust](https://www.rust-lang.org/tools/install) instalado.
 
 ```bash
-# Prerequisites: Rust stable (edition 2024)
-git clone https://github.com/<your-username>/rust-investment-wallet.git
+git clone https://github.com/seu-usuario/rust-investment-wallet.git
 cd rust-investment-wallet
 cargo run
 ```
 
-The server starts on **`http://localhost:3000`**.
+A aplicação será iniciada em `http://localhost:3000`.
 
-> State is in-memory only — all data is lost on restart.
-
----
-
-## Usage
-
-### Web interface
-
-| Route | Description |
-|---|---|
-| `GET /` | Redirects to `/assets` if authenticated, otherwise to `/login` |
-| `GET /login` | Login / registration page |
-| `POST /login` | Submits credentials; registers the user if the username is new |
-| `GET /assets` | Portfolio dashboard (requires auth cookie) |
-| `POST /assets` | Records a purchase (requires auth cookie) |
-| `GET /logout` | Clears the auth cookie and redirects to `/login` |
-
-### Admin REST API
-
-All `/api/*` routes require the `Authorization` header set to the admin secret key.
-
-#### List assets
-
-```bash
-curl http://localhost:3000/api/assets
-```
-
-```json
-[
-  { "id": 1, "name": "PETR4", "unit_value": 38.50 },
-  { "id": 2, "name": "BTC",   "unit_value": 320000.00 }
-]
-```
-
-#### Create asset
+Para criar ativos disponíveis para compra, utilize a API administrativa:
 
 ```bash
 curl -X POST http://localhost:3000/api/assets \
-  -H "Authorization: im-the-admin" \
   -H "Content-Type: application/json" \
-  -d '{ "name": "PETR4", "unit_value": 38.50 }'
+  -H "Authorization: im-the-admin" \
+  -d '{"name": "Bitcoin", "unit_value": 350000.00}'
 ```
 
-```json
-{ "id": 1, "name": "PETR4", "unit_value": 38.50 }
-```
+## Melhorias implementadas
 
-#### Update asset
+As seguintes melhorias foram implementadas como parte da evolução solicitada pela atividade:
 
-Supports partial updates — omit any field to leave it unchanged.
+### 1. Separação de login e cadastro
+
+Na versão original, login e cadastro compartilhavam o mesmo formulário e endpoint. Se o usuário não existisse, o cadastro era feito automaticamente durante o login.
+
+Na versão atual, os dois fluxos foram separados em páginas e rotas distintas:
+
+- `GET /login` — exibe o formulário de login
+- `POST /login` — realiza somente a autenticação
+- `GET /register` — exibe o formulário de cadastro
+- `POST /register` — realiza somente o cadastro de novo usuário
+
+A página de login possui um link para a página de cadastro, e a página de cadastro possui um link de volta para o login. A lógica de autenticação, hash de senha e geração de JWT permanece inalterada.
+
+### 2. Botão de logout no dashboard
+
+O logout já existia na aplicação por meio da rota `GET /logout`. A melhoria consistiu em reposicionar o botão de logout para o header do dashboard (`/assets`), ao lado da mensagem de boas-vindas, tornando a ação de sair da conta visível e acessível ao usuário autenticado.
+
+## Como testar as melhorias
+
+Após iniciar a aplicação com `cargo run`:
+
+1. Acesse `http://localhost:3000` — você será redirecionado para `/login`
+2. Na página de login, clique em **create account** para ir à página de cadastro
+3. Na página de cadastro (`/register`), crie um usuário com username e senha
+4. Após o cadastro, você será redirecionado automaticamente para o dashboard (`/assets`)
+5. No header do dashboard, verifique que o botão **logout** está visível ao lado de "welcome, [username]"
+6. Clique em **logout** — você será redirecionado de volta para `/login`
+7. Faça login com o usuário que acabou de criar para confirmar que a autenticação funciona corretamente
+
+## Validação do código
 
 ```bash
-curl -X PATCH http://localhost:3000/api/assets \
-  -H "Authorization: im-the-admin" \
-  -H "Content-Type: application/json" \
-  -d '{ "id": 1, "unit_value": 41.20 }'
+cargo fmt       # formatação
+cargo clippy    # análise estática
+cargo build     # compilação
+cargo test      # execução de testes (o projeto não possui testes automatizados)
 ```
 
-```json
-{ "id": 1, "name": "PETR4", "unit_value": 41.20 }
-```
+Todos os comandos acima executam sem erros ou warnings.
 
-### Error responses
+## O que foi aprendido
 
-All errors return a consistent JSON body:
-
-```json
-{ "error": "Asset does not exist" }
-```
-
-| Scenario | HTTP status |
-|---|---|
-| Missing `Authorization` header / cookie | `400 Bad Request` |
-| Wrong credentials or invalid JWT | `401 Unauthorized` |
-| Asset or user not found | `404 Not Found` |
-| Username already registered | `400 Bad Request` |
-
----
-
-## Architecture notes
-
-- **`Repository` as an Axum extractor** — `Repository` implements `FromRequestParts<AppState>`, so it is injected directly into handler signatures without requiring an explicit `State(...)` call.
-- **`User` as an Axum extractor** — The `User` struct implements `FromRequestParts`, reading the `token` cookie and verifying the JWT. Routes that require auth simply declare `user: User` in their signature; unauthenticated requests are rejected automatically.
-- **`Option<User>` extractor** — Used on the index route to redirect without returning an error for unauthenticated requests.
-- **Compile-time templates** — Askama templates are type-checked at compile time against the structs they receive, eliminating a class of runtime template errors.
-
----
-
-## Development
-
-There are no automated tests in the current version. To check formatting and lints:
-
-```bash
-cargo fmt --check   # formatting
-cargo clippy        # lints
-cargo build         # full compilation check
-```
-
----
-
-## Context
-
-This project was built as part of the **Santander Bootcamp Rust AI Developer**, a training program offered by [DIO](https://www.dio.me/). It served as a hands-on exercise in building a real, layered Rust web application — covering async programming with Tokio, HTTP routing with Axum, authentication with JWTs and password hashing, and server-side rendering with Askama.
+- Construção de uma aplicação web fullstack utilizando Rust com Axum como framework
+- Utilização de templates HTML com Askama para renderização server-side
+- Implementação de autenticação baseada em JWT com cookies `HttpOnly`
+- Hash seguro de senhas com a crate `password-auth`
+- Gerenciamento de estado compartilhado com `Arc<Mutex<>>` no Axum
+- Separação de rotas frontend (HTML) e API (JSON) na mesma aplicação
+- Uso de extractors customizados do Axum para autenticação e acesso ao repositório
+- Refatoração de fluxos de autenticação para separar responsabilidades entre login e cadastro

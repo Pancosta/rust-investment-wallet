@@ -20,7 +20,12 @@ impl Repository {
     pub async fn create_asset(&self, name: String, unit_value: f64) -> Result<Asset, Infallible> {
         let mut assets = self.state.assets.lock().await;
 
-        let id = assets.iter().map(|asset| asset.id).max().unwrap_or_default() + 1;
+        let id = assets
+            .iter()
+            .map(|asset| asset.id)
+            .max()
+            .unwrap_or_default()
+            + 1;
 
         let new_asset = Asset {
             id,
@@ -51,11 +56,15 @@ impl Repository {
                 return Ok(Some(asset.clone()));
             }
         }
-        
+
         Ok(None)
     }
 
-    pub async fn add_user(&self, username: &str, password_hash: &str) -> Result<UserRecord, crate::error::AppError> {
+    pub async fn add_user(
+        &self,
+        username: &str,
+        password_hash: &str,
+    ) -> Result<UserRecord, crate::error::AppError> {
         let mut users = self.state.users.lock().await;
 
         if users.iter().any(|u| u.username == username) {
@@ -76,11 +85,14 @@ impl Repository {
 
     pub async fn get_user_by_name(&self, username: &str) -> Result<Option<UserRecord>, Infallible> {
         let users = self.state.users.lock().await;
-        
+
         Ok(users.iter().find(|u| u.username == username).cloned())
     }
 
-    pub async fn list_owned_assets(&self, user_id: i64) -> Result<Vec<crate::models::OwnedAsset>, Infallible> {
+    pub async fn list_owned_assets(
+        &self,
+        user_id: i64,
+    ) -> Result<Vec<crate::models::OwnedAsset>, Infallible> {
         let assets = self.state.assets.lock().await;
         let purchases = self.state.purchases.lock().await;
         let mut owned_assets = Vec::new();
@@ -90,7 +102,10 @@ impl Repository {
             let mut value_delta = 0.0;
             let mut purchase_history = Vec::new();
 
-            for purchase in purchases.iter().filter(|p| p.user_id == user_id && p.asset_id == asset.id) {
+            for purchase in purchases
+                .iter()
+                .filter(|p| p.user_id == user_id && p.asset_id == asset.id)
+            {
                 quantity_owned += purchase.quantity;
                 let delta = (asset.unit_value - purchase.bought_for) * purchase.quantity;
                 value_delta += delta;

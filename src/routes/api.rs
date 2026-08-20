@@ -32,7 +32,8 @@ async fn create_asset(
 ) -> Result<Json<Asset>, AppError> {
     let new_asset = repository
         .create_asset(request.name, request.unit_value)
-        .await.unwrap();
+        .await
+        .unwrap();
 
     Ok(Json(new_asset))
 }
@@ -52,7 +53,8 @@ async fn update_asset(
 ) -> Result<Json<Asset>, AppError> {
     match repository
         .update_asset(request.id, request.name, request.unit_value)
-        .await.unwrap()
+        .await
+        .unwrap()
     {
         Some(updated_asset) => Ok(Json(updated_asset)),
         None => Err(AppError::AssetDoesNotExist),

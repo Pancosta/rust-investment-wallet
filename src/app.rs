@@ -1,12 +1,14 @@
-use std::sync::Arc;
 use axum::Router;
+use std::sync::Arc;
 
 use tokio::{net::TcpListener, sync::Mutex};
 use tracing::info;
-use tracing_subscriber::{Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt};
+use tracing_subscriber::{
+    Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt,
+};
 
+use crate::models::{Asset, PurchaseRecord, UserRecord};
 use crate::routes;
-use crate::models::{Asset, UserRecord, PurchaseRecord};
 
 #[derive(Clone)]
 pub struct AppState {
